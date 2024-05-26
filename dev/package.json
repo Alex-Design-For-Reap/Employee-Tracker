@@ -1,0 +1,15 @@
+{
+  "dependencies": {
+    "inquirer": "^8.2.4"
+  },
+  "name": "dev",
+  "version": "1.0.0",
+  "description": "Employee Tracker",
+  "main": "index.js",
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Alex Da Silva",
+  "license": "ISC"
+}
