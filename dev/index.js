@@ -6,8 +6,8 @@ const express = require('express');
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-// app.use(express.urlencoded({ extended: false }));
-// app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
+app.use(express.json());
 
 const pool = new Pool({
     user: process.env.DB_USER,
@@ -17,13 +17,6 @@ const pool = new Pool({
     // port: 5432,
 });
 
-const client = new Client({
-    user: process.env.DB_USER,
-    host: process.env.DB_HOST,
-    database: process.env.DB_DATABASE,
-    password: process.env.DB_PASSWORD,
-    port: process.env.DB_PORT,
-});
 
 pool.on('connect', () => {
     console.log(`Connected to the employeetracker_db database.`);
@@ -95,7 +88,7 @@ const viewRoles = async () => {
 
 const viewEmployees = async () => {
     const res = await pool.query(
-        'SELECT employees.id, employees.first_name, employees.last_name, roles.role_title, departments.dep_title as department, roles.salary as salary, managers.full_name as manager FROM employees JOIN roles ON employees.role_id = roles.id JOIN departments ON employees.department_id = departments.id JOIN managers ON employees.manager_id = managers.id');
+        'SELECT employees.id,employees.first_name, employees.last_name, roles.role_title, departments.dep_title as department, roles.salary as salary, managers.full_name as manager FROM employees LEFT JOIN roles ON employees.role_id = roles.id LEFT JOIN departments ON employees.department_id = departments.id LEFT JOIN managers ON employees.manager_id = managers.id');
     console.table(res.rows);
     mainMenu();
 };
@@ -147,7 +140,7 @@ const addEmployee = async () => {
 
     const managers = await pool.query('SELECT * FROM managers');
     const managerChoices = managers.rows.map(managers => ({ name: managers.full_name, value: managers.id }));
-    // managerChoices.push({ name: 'None', value: null });
+    managerChoices.push({ name: 'None', value: null });
 
     const answers = await inquirer.prompt([
         {
@@ -173,7 +166,11 @@ const addEmployee = async () => {
             choices: managerChoices
         }
     ]);
-    await pool.query('INSERT INTO employees (first_name, last_name, role_id, manager_id) VALUES ($1, $2, $3, $4)', [answers.first_name, answers.last_name, answers.role_id, answers.manager_id]);
+
+    const roleDetails = await pool.query('SELECT department_id FROM roles WHERE id = $1', [answers.role_id]);
+    const department_id = roleDetails.rows[0].department_id;
+
+    await pool.query('INSERT INTO employees (first_name, last_name, role_id, department_id, manager_id) VALUES ($1, $2, $3, $4, $5)', [answers.first_name, answers.last_name, answers.role_id, department_id, answers.manager_id]);
     console.log(`Added ${answers.first_name} ${answers.last_name} to the database`);
     mainMenu();
 };
@@ -200,18 +197,19 @@ const updateEmployeeRole = async () => {
             choices: roleChoices
         }
     ]);
-    await pool.query('UPDATE employees SET role_id = $1 WHERE id = $2', [answers.role_id, answers.employee_id]);
-    console.log('Updated employee role');
+
+    const roleDetails = await pool.query('SELECT department_id, salary FROM roles WHERE id = $1', [answers.role_id]);
+    const { department_id, salary } = roleDetails.rows[0];
+
+    const salaryAsInt = parseInt(salary, 10);
+
+    await pool.query('UPDATE employees SET role_id = $1, department_id = $2, role_salary = $3 WHERE id = $4', [answers.role_id, department_id, salaryAsInt, answers.employee_id]);
+
+    console.log('Updated employee role with new department and salary');
     mainMenu();
 };
 
-
-
-
-
-
 mainMenu();
-
 
 // Default response for any other request (Not Found)
 app.use((req, res) => {
@@ -222,5 +220,3 @@ app.use((req, res) => {
     console.log(`Server running on port ${PORT}`);
   });
 
-
-        

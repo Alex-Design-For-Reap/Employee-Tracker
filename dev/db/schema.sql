@@ -25,13 +25,12 @@ create table employees (
     id serial primary key,
     first_name varchar(30) not null,
     last_name varchar(30) not null,
-    role_id integer not null,
+    role_id integer,
     department_id integer,
     role_salary integer,
     manager_id integer,
 
     foreign key (role_id) references roles(id) on delete set null,
     foreign key (department_id) references departments(id) on delete set null,
-    -- foreign key (role_salary) references roles(id) on delete set null,
     foreign key (manager_id) references managers(id) on delete set null
 );
