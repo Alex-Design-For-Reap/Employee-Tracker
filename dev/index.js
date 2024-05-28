@@ -14,7 +14,6 @@ const pool = new Pool({
     password: process.env.DB_PASSWORD,
     host: process.env.DB_HOST,
     database: process.env.DB_DATABASE,
-    // port: 5432,
 });
 
 
@@ -211,7 +210,6 @@ const updateEmployeeRole = async () => {
 
 mainMenu();
 
-// Default response for any other request (Not Found)
 app.use((req, res) => {
     res.status(404).end();
   });
