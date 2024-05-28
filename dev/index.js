@@ -10,11 +10,19 @@ const PORT = process.env.PORT || 3001;
 // app.use(express.json());
 
 const pool = new Pool({
-    user: 'postgres',
-    password: 'S.alexsilva260902',
-    host: 'localhost',
-    database: 'employeetracker_db',
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    host: process.env.DB_HOST,
+    database: process.env.DB_DATABASE,
     // port: 5432,
+});
+
+const client = new Client({
+    user: process.env.DB_USER,
+    host: process.env.DB_HOST,
+    database: process.env.DB_DATABASE,
+    password: process.env.DB_PASSWORD,
+    port: process.env.DB_PORT,
 });
 
 pool.on('connect', () => {
